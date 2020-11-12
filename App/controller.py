@@ -25,6 +25,7 @@
  """
 
 import config as cf
+import os
 from App import model
 import csv
 
@@ -39,7 +40,9 @@ recae sobre el controlador.
 # ___________________________________________________
 #  Inicializacion del catalogo
 # ___________________________________________________
-
+def init():
+    analyzer = model.newAnalyzer()
+    return analyzer
 
 # ___________________________________________________
 #  Funciones para la carga de datos y almacenamiento
@@ -49,3 +52,42 @@ recae sobre el controlador.
 # ___________________________________________________
 #  Funciones para consultas
 # ___________________________________________________
+
+
+def loadFile(analyzer):
+    
+    for filename in os.listdir(cf.data_dir):
+        if filename.endswith('.csv'):
+            print('Cargando archivo: ' + filename)
+            loadData(analyzer, filename)
+    return analyzer
+
+
+
+
+def loadData(analyzer, tripFile):
+    """
+    Carga los datos de los archivos CSV en el modelo
+    """
+    tripFile = cf.data_dir + tripFile
+    input_file = csv.DictReader(open(tripFile, encoding="utf-8"),
+                                delimiter=",")
+    for trip in input_file:
+        model.addTrip(analyzer, trip)
+    return analyzer
+
+
+def totalConnections(analyzer):
+    return model.totalConnections(analyzer)
+
+
+def totalStops(analyzer):
+
+    return model.totalStops(analyzer)
+
+def connectedComponents(analyzer):
+
+    return model.connectedComponents(analyzer)
+
+
+

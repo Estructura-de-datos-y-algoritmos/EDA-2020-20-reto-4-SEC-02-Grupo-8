@@ -29,6 +29,7 @@ import sys
 import config
 from App import controller
 from DISClib.ADT import stack
+from time import process_time
 import timeit
 assert config
 
@@ -43,10 +44,84 @@ operación seleccionada.
 #  Variables
 # ___________________________________________________
 
+tripFile = '201801-1-citibike-tripdata.csv'
+#initialStation = None
+#recursionLimit = 20000
+
 
 # ___________________________________________________
 #  Menu principal
 # ___________________________________________________
+
+def printMenu():
+    print("\n")
+    print("*******************************************")
+    print("Bienvenido")
+    print("1- Inicializar Analizador")
+    print("2- Cargar información de Citibike")
+    print("3- Requerimiento 1")
+    print("4- Requerimiento 2")
+    print("5- Requerimiento 3")
+    print("6- Requerimiento 4")
+    print("7- Requerimiento 5")
+    print("8- Requerimiento 8")
+    print("0- Salir")
+    print("*******************************************")
+
+
+
+while True:
+    printMenu()
+    inputs = input('Seleccione una opción para continuar\n')
+
+    if int(inputs[0]) == 1:
+        print("\nInicializando....")
+        # cont es el controlador que se usará de acá en adelante
+        cont = controller.init()
+
+    elif int(inputs[0]) == 2:
+        print("\nCargando rutas ....")
+        t1 = process_time()
+        controller.loadFile(cont)
+        arcos = controller.totalConnections(cont)
+        vertices = controller.totalStops(cont)
+        conectado = controller.connectedComponents(cont)
+        print('Numero de arcos: ' + str(arcos))
+        print('Numero de vertices: ' + str(vertices)) 
+        print('El número de componentes fuertemente conectados es: ' + str(conectado))
+        t2 = process_time()
+        t = t2-t1
+        print("Tiempo requerido: ", t)
+        
+
+    elif int(inputs[0]) == 3:
+        pass
+       
+        
+
+    elif int(inputs[0]) == 4:
+        pass
+        
+
+
+    elif int(inputs[0]) == 5:
+        pass
+       
+
+    
+    elif int(inputs[0]) == 6:
+        pass
+        
+
+    
+    elif int(inputs[0]) == 7:
+        pass
+       
+
+    else:
+        sys.exit(0)
+sys.exit(0)
+
 
 """
 Menu principal
