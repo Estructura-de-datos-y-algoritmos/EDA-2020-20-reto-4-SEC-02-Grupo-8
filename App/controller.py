@@ -74,6 +74,7 @@ def loadData(analyzer, tripFile):
                                 delimiter=",")
     for trip in input_file:
         model.addTrip(analyzer, trip)
+        model.addAge(analyzer, trip)
     return analyzer
 
 
@@ -89,5 +90,31 @@ def connectedComponents(analyzer):
 
     return model.connectedComponents(analyzer)
 
+
+def inician(analyzer, edad):
+
+    return model.inician(analyzer, edad)
+
+
+def rutaCircular(analyzer, time, identificador):
+
+    return model.rutaCircular(analyzer, time, identificador)
+
+
+def estacionCritica(analyzer):
+
+    return model.estacionCritica(analyzer)
+
+def estacionCriticaSalida(analyzer):
+
+    return model.estacionCriticaSalida(analyzer)
+
+def estacionCriticaSinuso(analyzer):
+
+    return model.estacionCriticaSinuso(analyzer)
+
+
+def coordenadas(analyzer, first_ll, last_ll):
+    return model.coordenadas(analyzer, first_ll, last_ll)
 
 

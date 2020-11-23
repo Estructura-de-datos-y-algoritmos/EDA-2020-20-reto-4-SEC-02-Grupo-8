@@ -59,12 +59,11 @@ def printMenu():
     print("Bienvenido")
     print("1- Inicializar Analizador")
     print("2- Cargar información de Citibike")
-    print("3- Requerimiento 1")
-    print("4- Requerimiento 2")
-    print("5- Requerimiento 3")
-    print("6- Requerimiento 4")
-    print("7- Requerimiento 5")
-    print("8- Requerimiento 8")
+    print("3- Requerimiento 2")
+    print("4- Requerimiento 3")
+    print("5- Requerimiento 4")
+    print("6- Requerimiento 5")
+    print("7- Requerimiento 6")
     print("0- Salir")
     print("*******************************************")
 
@@ -95,13 +94,26 @@ while True:
         
 
     elif int(inputs[0]) == 3:
-        pass
+        print("Ruta turistica circular...\n")
+        time = input("Digite cuanto tiempo tiene disponible en minutos: ")
+        identificador = input("Diga el identificador de la estacion de inicio: ")
+        kosaju, conteo = controller.rutaCircular(cont, time, identificador)
+        print(kosaju)
+        print("CONTEOOOOO", conteo)
        
         
 
     elif int(inputs[0]) == 4:
-        pass
-        
+        print("Estaciones Criticas...\n")
+        first, second, vertice, vertice2, third, vertice3 = controller.estacionCritica(cont)
+        print("TOP 3 ESTACIONES A LAS QUE LLEGAN MÁS BICICLETAS\n")
+        print("Primero ", vertice, "con", first, "\nSegundo ", vertice2, "con", second, "\nTercero ", vertice3, "con", third) 
+        primero, segundo, tercero, verti, verti2, verti3 = controller.estacionCriticaSalida(cont) 
+        print("\nTOP 3 ESTACIONES A LAS QUE SALEN MÁS BICICLETAS\n")
+        print("Primero ", verti, "con", primero, "\nSegundo ", verti2, "con", segundo, "\nTercero ", verti3, "con", tercero)
+        fi, se, th, v, v2, v3 = controller.estacionCriticaSinuso(cont)
+        print("\nTOP 3 ESTACIONES QUE MENOS USO TIENEN\n")
+        print("Primero ", v, "con", fi, "\nSegundo ", v2, "con", se, "\nTercero ", v3, "con", th)
 
 
     elif int(inputs[0]) == 5:
@@ -110,12 +122,18 @@ while True:
 
     
     elif int(inputs[0]) == 6:
-        pass
+        print("Recomendador de rutas...\n")
+        edad = input("Digite su edad en años: ")
+        maxi = controller.inician(cont, edad)
+        #print("La estación de la cual más se inician viajes es: ", llave, "con", maxi)
         
 
     
     elif int(inputs[0]) == 7:
-        pass
+        print("Ruta de interes turistico...\n")
+        first_ll = input("Digite sus coordenadas: ")
+        last_ll = input("Digite las coordenadas de su sitio de interes turistico: ")
+        controller.coordenadas(cont, first_ll, last_ll)
        
 
     else:
