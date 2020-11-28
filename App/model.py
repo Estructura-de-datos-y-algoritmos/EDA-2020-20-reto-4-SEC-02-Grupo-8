@@ -26,13 +26,17 @@
 import config
 from DISClib.ADT.graph import gr
 from DISClib.Algorithms.Graphs import dfs
+from DISClib.Algorithms.Graphs import bfs
 from DISClib.ADT import map as m
+from DISClib.ADT import stack
 from DISClib.ADT import list as lt
 from DISClib.DataStructures import listiterator as it
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dijsktra as djk
 from DISClib.DataStructures import mapentry as me
 from DISClib.Utils import error as error
+from math import sin, cos, sqrt, atan2, radians
+import gpxpy.geo
 assert config
 
 """
@@ -53,10 +57,23 @@ def newAnalyzer():
                                     directed=True,
                                     size=1000,
                                     comparefunction=compareStations)
-    analyzer['edad'] = m.newMap(1000, 
+    analyzer['ruta'] = m.newMap(1000, 
+                                maptype='PROBING', 
+                                loadfactor=0.5,
+                                comparefunction= compareStations)
+
+    analyzer['edad'] = m.newMap(15, 
                                 maptype='PROBING', 
                                 loadfactor=0.5,
                                 comparefunction= compareAge)
+    analyzer["coor_start"] = m.newMap(700, 
+                                maptype='PROBING', 
+                                loadfactor=0.5,
+                                comparefunction= compareCoordinates)
+    analyzer["coor_end"] = m.newMap(700, 
+                                maptype='PROBING', 
+                                loadfactor=0.5,
+                                comparefunction= compareCoordinates)
 
     return analyzer
 
@@ -67,6 +84,46 @@ def newAnalyzer():
 # Funciones de consulta
 # ==============================
 
+def addRuta(analyzer, trip):
+    origen = trip["start station id"]
+    destino = trip["end station id"]
+    key = origen+"-"+destino
+    llave = m.get(analyzer["ruta"], key)
+    if llave is None:
+        valor = {}
+        valor["lstDuracion"] = lt.newList('SINGLE_LINKED', compareLista)
+        m.put(analyzer["ruta"], key, valor)
+    else:
+        valor = me.getValue(llave)
+    lt.addLast(valor["lstDuracion"], trip["tripduration"])
+
+    return analyzer
+
+
+def addnewTrip(analyzer):
+    llave = m.keySet(analyzer["ruta"])
+    itera = it.newIterator(llave)
+    while it.hasNext(itera):
+        recorrido = 0
+        duracion = 0
+        ruta = it.next(itera)
+        llv = m.get(analyzer["ruta"], ruta)
+        valor = me.getValue(llv)
+        itera2 = it.newIterator(valor["lstDuracion"])
+        while it.hasNext(itera2):
+            rec = int(it.next(itera2))
+            recorrido += rec
+        duracion = recorrido/lt.size(valor["lstDuracion"])
+        ruta = ruta.split("-")
+        origen = ruta[0]
+        destino = ruta[1]
+        addStation(analyzer, origen)
+        addStation(analyzer, destino)
+        addConnection(analyzer, origen, destino, duracion)
+        
+
+
+'''
 def addTrip(analyzer, trip):
     
     origen = trip["start station id"]
@@ -75,7 +132,7 @@ def addTrip(analyzer, trip):
     addStation(analyzer, origen)
     addStation(analyzer, destino)
     addConnection(analyzer, origen, destino, duracion)
-
+'''
 
 def addStation(analyzer, id):
 
@@ -95,29 +152,45 @@ def addAge(analyzer, trip):
 
     llave = aproximaredad(analyzer, trip)
     entra = m.get(analyzer["edad"], llave)
-    valor = NewEntry(trip)
 
     if entra is None:
-        
-        dicci = {}
-        dicci["num"] = 1
-        entrada = m.put(valor["e_salida"],trip["start station id"], dicci)
-        #llegada = m.put(valor["e_llegada"], trip["end station id"], dicci)
-        m.put(analyzer["edad"], llave, entrada)
+        valor = NewEntry(trip)
+        m.put(analyzer["edad"], llave, valor)
     else:
-        esta = m.get(valor["e_salida"], trip["start station id"])
-        if esta is None:
-            dicci = {}
-            dicci["num"] = 1            
-            entrada = m.put(valor["e_salida"],trip["start station id"], dicci)
-        else:
-            #dicci["num"] += 1
-            l = m.get(valor["e_salida"], trip["start station id"])
-            v = me.getValue(l)
-            v["num"] += 1
-        #estaa = m.get(valor["e_llegada"], trip["end station id"])
+        valor = me.getValue(entra)
+        actualizar(valor["e_salida"], trip["start station id"])
+        actualizar(valor["e_llegada"], trip["end station id"])
     
-    return dicci
+    return analyzer
+
+def actualizar(map, llave):
+    entry = m.get(map, llave)
+    if entry is None:
+        m.put(map, llave, 1)
+    else:
+        valor = me.getValue(entry)
+        valor += 1
+        me.setValue(entry, valor)
+    return map
+
+
+
+def addCoordinate(analyzer, trip):
+    
+    esta = m.get(analyzer["coor_start"], trip["start station id"])
+    if esta is None:
+        dicci = {}
+        dicci["latitud"] = trip["start station latitude"]
+        dicci["longitud"] = trip["start station longitude"]
+        m.put(analyzer["coor_start"], trip["start station id"], dicci)
+    entra = m.get(analyzer["coor_end"], trip["end station id"])
+    if entra is None:
+        diccit = {}
+        diccit["latitud"] = trip["end station latitude"]
+        diccit["longitud"] = trip["end station longitude"]
+        m.put(analyzer["coor_end"], trip["end station id"], diccit)
+    
+    return analyzer
 
 
 def aproximaredad(analyzer, trip):
@@ -146,29 +219,31 @@ def aproximaredad(analyzer, trip):
         return llave
 
 def aproximarEdad(analyzer, edad):
-    
-    edad = int(edad)
-    if edad <= 10:
-        llave = 1
-        return llave
-    elif edad <= 20 and edad > 10:
-        llave = 2
-        return llave
-    elif edad <= 30 and edad > 20:
-        llave = 3
-        return llave
-    elif edad <= 40 and edad > 30:
-        llave = 4
-        return llave
-    elif edad <= 50 and edad > 40:
-        llave = 5
-        return llave
-    elif edad <= 60 and edad > 50:
-        llave = 6
-        return llave
-    else:
-        llave = 7
-        return llave
+    try:
+        edad = int(edad)
+        if edad <= 10:
+            llave = 1
+            return llave
+        elif edad <= 20 and edad > 10:
+            llave = 2
+            return llave
+        elif edad <= 30 and edad > 20:
+            llave = 3
+            return llave
+        elif edad <= 40 and edad > 30:
+            llave = 4
+            return llave
+        elif edad <= 50 and edad > 40:
+            llave = 5
+            return llave
+        elif edad <= 60 and edad > 50:
+            llave = 6
+            return llave
+        else:
+            llave = 7
+            return llave
+    except:
+        print("No hay registros")
 
 def NewEntry(trip):
     
@@ -179,43 +254,104 @@ def NewEntry(trip):
                                     maptype='PROBING', 
                                     loadfactor=0.5,
                                     comparefunction= compareStations)
-    #entry['e_llegada'] = m.newMap(30, 
-     #                               maptype='PROBING', 
-      #                              loadfactor=0.5,
-       #                             comparefunction= compareStations)
+    entry['e_llegada'] = m.newMap(30, 
+                                    maptype='PROBING', 
+                                    loadfactor=0.5,
+                                    comparefunction= compareStations)
 
-    #m.put(entry["e_salida"], trip[""])
     return entry
 
-def inician(analyzer, edad):
+def inician(analyzer, edad):                              
 
     llave = aproximarEdad(analyzer, edad)
-    llv = m.get(analyzer["edad"], llave)
-    tabla = me.getValue(llv)
-    print(tabla)
-    '''
-    ids = m.keySet(tabla)
-    itera = it.newIterator(ids)
-    maxi = 0 
+    tabla = m.get(analyzer["edad"], llave)
+    if tabla is not None:
+        map_salida = me.getValue(tabla)["e_salida"]
+        map_llegada = me.getValue(tabla)["e_llegada"]
+        max_salida = maximo(map_salida)
+        max_llegada = maximo(map_llegada)
+        paths = rutaTuristica(analyzer, max_salida)
+        distancia_e(paths, max_llegada)
+    
+    return (max_salida, max_llegada)
 
+
+def maximo(map):
+    llave = m.keySet(map)
+    itera = it.newIterator(llave)
+    mayor = 0
     while it.hasNext(itera):
-        id = it.next(itera)
-        ll = m.get(tabla, id)
-        conteo = me.getValue(ll)
-        for k in conteo:
-            if conteo[k] > maxi:
-                maxi = conteo[k]
-                llave = id
-    return maxi, llave
-    '''
-        
+        ll = it.next(itera)
+        entry = m.get(map, ll)
+        valor = me.getValue(entry)
+        if valor > mayor:
+            mayor = valor
+            estacion = ll
+    return estacion
 
-def rutaCircular(analyzer, time, identificador):
 
-    kosaju = scc.KosarajuSCC(analyzer["graph"])
-    conteo = scc.sccCount(analyzer["graph"], kosaju, identificador)
 
-    return kosaju, conteo
+def rutaCircular(analyzer, tiempo, station):
+
+    nodos = dfs.DepthFirstSearch(analyzer["graph"], station)
+    estacionesdestino = m.keySet(nodos['visited'])
+    itera = it.newIterator(estacionesdestino)
+    lst_rutas ={}
+    while it.hasNext(itera):
+        conta_tiempo1 =0
+        Key_stacion = it.next(itera)
+        key1=""
+        ruta_ok = False
+        vallor =""
+
+        valor = m.get(nodos['visited'],Key_stacion)['value']['edgeTo']
+        if valor is not None:
+            key_ini = valor
+            while True:
+                valor_arco = gr.getEdge(analyzer["graph"],key_ini,Key_stacion)['weight']
+                conta_tiempo1=conta_tiempo1+ valor_arco   + 1200
+
+                if conta_tiempo1 > tiempo:
+                    ruta_ok = False
+                    break
+
+                if key_ini ==  station:
+                    ruta_ok = True
+                    key1 = key1 + "*" + key_ini + "-" + Key_stacion
+                    vallor = vallor + key1 + "-Valor Arco " + str(valor_arco) + " valor conta_tiempo1 " + str(conta_tiempo1) +"\n"
+                    break   
+
+                key1 = key1 + "*"+ key_ini + "-" + Key_stacion 
+                Key_stacion = key_ini
+                key_ini  = m.get(nodos['visited'],Key_stacion)['value']['edgeTo']
+            
+            if ruta_ok:
+                print("Ruta  Ok...", key1)
+                print("vallor... ", vallor)
+                key_ruta = key1.split("*")
+                key_2 =""
+                for k in reversed(key_ruta):
+                    if k != "":
+                        if len(key_2)== 0: #prmera vez que entra 
+                            key_2 = k
+                        else:
+                            key_2 = key_2 + "-"+ k 
+                
+                print("Ruta ordenada ",key_2)
+                ultima = key_2.split("-")
+                print("ultima", ultima, "longi ", len(ultima))
+                ultima_ruta = ultima[len(ultima)-1]
+                print("ultima ruta ", ultima_ruta)
+                ultimo_valor = gr.getEdge(analyzer["graph"],ultima_ruta,station)
+
+                if (ultimo_valor is not None):
+                    conta_tiempo1 = conta_tiempo1 +  ultimo_valor['weight']
+                                    
+                    if (conta_tiempo1 <= tiempo):
+                        key_2 = key_2 + "-" + station
+                        lst_rutas[key_2] = conta_tiempo1 
+    print("Rutas seleccionadas  ",lst_rutas)
+    return lst_rutas
 
 def estacionCritica(analyzer):
     
@@ -295,9 +431,104 @@ def estacionCriticaSinuso(analyzer):
     return fi, se, th, v, v2, v3
 
 
-def coordenadas(analyzer, first_ll, last_ll):
+def coordenadas(analyzer, first_la, first_lo, last_la, last_lo):
 
-    pass
+    map = analyzer["coor_start"]
+    firstStation = estacion_cercana(map, first_la, first_lo)
+
+    map = analyzer["coor_end"]
+    lastStation = estacion_cercana(map, last_la, last_lo)
+
+    paths = rutaTuristica(analyzer, firstStation)
+    distancia_e(paths, lastStation)
+
+    return (firstStation, lastStation)
+
+
+
+def estacion_cercana(map, lat, lon):
+    
+    estacion = ""
+    dista = 1000
+    lista_k = m.keySet(map)
+    itera = it.newIterator(lista_k)
+    while it.hasNext(itera):
+        id = it.next(itera)
+        dicci = m.get(map, id)
+        valor = me.getValue(dicci)
+        latitud = float(valor["latitud"])
+        longitud = float(valor["longitud"])
+        ubicacion = (lat, lon)
+        origen = (latitud, longitud)
+        distance = distancia(origen, ubicacion)
+        if distance < dista:
+            dista = distance
+            estacion = id
+    return estacion
+
+
+
+def distancia(origen, ubicacion):
+    lat1, lon1 = origen
+    latitud, longitud = ubicacion
+    R = 6371
+    lat1 = radians(float(lat1))
+    lon1 = radians(float(lon1))
+
+    latitud = radians(float(latitud))
+    longitud = radians(float(longitud))
+
+    dlon = longitud - lon1 
+    dlat = latitud - lat1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(latitud) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = R * c
+
+    return distance
+
+
+def rutaTuristica(analyzer, id):
+    paths = djk.Dijkstra(analyzer["graph"], id)
+    return paths
+
+def distancia_e(paths, estacion_llegada):
+    keys = m.keySet(paths["visited"])
+    itera = it.newIterator(keys)
+    while it.hasNext(itera):
+        duracion = 0
+        ruta_turistica = ""
+        estacion = it.next(itera)
+        if estacion == estacion_llegada:
+            minpath = djk.pathTo(paths, estacion_llegada)
+            if minpath is not None:
+                while(not stack.isEmpty(minpath)):
+                    stop = stack.pop(minpath)
+                    duracion += stop["weight"]
+                    ruta_turistica += stop["vertexA"] +"-"+ stop["vertexB"]+"\n"
+                print("\nDuracion en minutos: ", int(duracion/60))
+                print("Camino más corto entre estaciones: ", ruta_turistica)
+
+                    
+
+def rutasTuristicas(paths, tiempo):
+    keys = m.keySet(paths["visited"])
+    itera = it.newIterator(keys)
+    while it.hasNext(itera):
+        duracion = 0
+        ruta_turistica = ""
+        estacion = it.next(itera)
+        minpath = djk.pathTo(paths, estacion)
+        if minpath is not None:
+            while(not stack.isEmpty(minpath)):
+                stop = stack.pop(minpath)
+                duracion += stop["weight"]
+                ruta_turistica += stop["vertexA"] +"-"+ stop["vertexB"]+"\n"
+            if duracion <= tiempo:
+                print("Duracion en minutos: ", int(duracion/60))
+                print("Estaciones para usar: ", ruta_turistica)
+
+
 
 # ==============================
 # Funciones Helper
@@ -333,8 +564,6 @@ def rutascirculares(analyzer, id):
 
 def compareStations(id1, id2):
     
-    #print("Compara ids-stop ", id1)
-    #print("Compara ids keyvaluestop  ", id2)
     id2 = id2['key']
     if (id1 == id2):
         return 0
@@ -345,8 +574,6 @@ def compareStations(id1, id2):
 
 def compareAge(edad1, edad2):
     
-    #print("EDAD1 ------------", edad1)
-    #print("EDAD2 ++++++++++", edad2)
     edad2 = edad2['key']
     if  edad1 == edad2:
         return 0
@@ -354,4 +581,18 @@ def compareAge(edad1, edad2):
         return 1
     else:
         return -1
-        
+
+def compareCoordinates(coor1, coor2):
+    
+    coor2 = coor2["key"]
+    if coor1 == coor2:
+        return 0
+    elif coor1 > coor2:
+        return 1
+    else:
+        return -1
+
+
+
+def compareLista(lista1, lista2):
+    pass

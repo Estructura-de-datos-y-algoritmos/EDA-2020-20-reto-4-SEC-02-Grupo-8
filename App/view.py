@@ -75,7 +75,6 @@ while True:
 
     if int(inputs[0]) == 1:
         print("\nInicializando....")
-        # cont es el controlador que se usará de acá en adelante
         cont = controller.init()
 
     elif int(inputs[0]) == 2:
@@ -93,14 +92,12 @@ while True:
         print("Tiempo requerido: ", t)
         
 
-    elif int(inputs[0]) == 3:
+    elif int(inputs[0]) == 3:                                                      #FALTA
         print("Ruta turistica circular...\n")
-        time = input("Digite cuanto tiempo tiene disponible en minutos: ")
+        time = int(input("Digite cuanto tiempo tiene disponible en minutos: "))
+        time *= 60
         identificador = input("Diga el identificador de la estacion de inicio: ")
-        kosaju, conteo = controller.rutaCircular(cont, time, identificador)
-        print(kosaju)
-        print("CONTEOOOOO", conteo)
-       
+        controller.rutaCircular(cont, time, identificador)       
         
 
     elif int(inputs[0]) == 4:
@@ -117,24 +114,34 @@ while True:
 
 
     elif int(inputs[0]) == 5:
-        pass
+        print("Ruta turistica...\n")
+        id = input("diga el id de la estación inicial: ")
+        tiempo = int(input("Diga cuanto tiempo tiene en minutos: "))
+        tiempo = tiempo*60
+        paths = controller.rutaTuristica(cont, id)
+        controller.rutasTuristicas(paths, tiempo)
        
 
     
     elif int(inputs[0]) == 6:
         print("Recomendador de rutas...\n")
-        edad = input("Digite su edad en años: ")
-        maxi = controller.inician(cont, edad)
-        #print("La estación de la cual más se inician viajes es: ", llave, "con", maxi)
+        edad = input("Digite su edad en años: \n")
+        max_salida, max_llegada = controller.inician(cont, edad)
+        print("La estación de la cual más se inician viajes es: ", max_salida, "\n")
+        print("La estacion de la cual llegan mas viajes es: ", max_llegada)
         
 
     
     elif int(inputs[0]) == 7:
-        print("Ruta de interes turistico...\n")
-        first_ll = input("Digite sus coordenadas: ")
-        last_ll = input("Digite las coordenadas de su sitio de interes turistico: ")
-        controller.coordenadas(cont, first_ll, last_ll)
-       
+        print("Ruta de interes turistico...\n")                            #40.766272, -73.993442
+        print("COORDENADAS\n")                                             #40.685531, -73.956102
+        first_la = input("Digite su latitud: ")                            #40.766352, -73.801875 (QUEENS)    40.678405, -73.992076 (BROOKLYN)
+        first_lo = input("Digite su longitud: ")                           #40.76727216,-73.99392888    40.71473993, -74.00910627
+        last_la = input("Digite la latitud de su destino: ")
+        last_lo = input("Digite la longitud de su destino: ")
+        firstStation, lastStation = controller.coordenadas(cont, first_la, first_lo, last_la, last_lo)
+        print("La estación más cercana a su ubicación es : ", firstStation, "\nLa más cercana a su destino es: ", lastStation)
+
 
     else:
         sys.exit(0)

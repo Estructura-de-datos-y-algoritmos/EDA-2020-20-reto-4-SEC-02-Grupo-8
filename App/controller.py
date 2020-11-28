@@ -60,6 +60,7 @@ def loadFile(analyzer):
         if filename.endswith('.csv'):
             print('Cargando archivo: ' + filename)
             loadData(analyzer, filename)
+    model.addnewTrip(analyzer)
     return analyzer
 
 
@@ -73,8 +74,10 @@ def loadData(analyzer, tripFile):
     input_file = csv.DictReader(open(tripFile, encoding="utf-8"),
                                 delimiter=",")
     for trip in input_file:
-        model.addTrip(analyzer, trip)
+        #model.addTrip(analyzer, trip)
+        model.addRuta(analyzer, trip)
         model.addAge(analyzer, trip)
+        model.addCoordinate(analyzer, trip)
     return analyzer
 
 
@@ -114,7 +117,13 @@ def estacionCriticaSinuso(analyzer):
     return model.estacionCriticaSinuso(analyzer)
 
 
-def coordenadas(analyzer, first_ll, last_ll):
-    return model.coordenadas(analyzer, first_ll, last_ll)
+def coordenadas(analyzer, first_la, first_lo, last_la, last_lo):
+    return model.coordenadas(analyzer, first_la, first_lo, last_la, last_lo)
 
 
+def rutaTuristica(analyzer, id):
+    return model.rutaTuristica(analyzer, id)
+
+
+def rutasTuristicas(paths, tiempo):
+    return model.rutasTuristicas(paths, tiempo)
